@@ -25,4 +25,9 @@ class ManifestTest < Minitest::Test
   def test_lookup_success
     assert_equal Webpacker.manifest.lookup("bootstrap.js"), "/packs/bootstrap-300631c4f0e0f9c865bc.js"
   end
+
+  def test_lookup_desktop_variant_success
+    variants = [:desktop]
+    assert_equal Webpacker.manifest.lookup("desktop.js", variants), "/packs/desktop-k344a6d59eef8632c9d1.js"
+  end
 end

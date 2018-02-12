@@ -11,6 +11,9 @@ class HelperTest < ActionView::TestCase
       def base_url
         "https://example.com"
       end
+      def variant
+        []
+      end
     end.new
   end
 

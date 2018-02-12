@@ -69,7 +69,7 @@ module Webpacker::Helper
 
   private
     def sources_from_pack_manifest(names, type:)
-      names.map { |name| Webpacker.manifest.lookup!(pack_name_with_extension(name, type: type)) }
+      names.map { |name| Webpacker.manifest.lookup!(pack_name_with_extension(name, type: type), request.variant) }
     end
 
     def pack_name_with_extension(name, type:)
