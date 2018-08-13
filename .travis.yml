@@ -3,15 +3,15 @@ language: ruby
 before_install:
   - gem update --system
 rvm:
-  - 2.2.9
-  - 2.3.6
-  - 2.4.3
-  - 2.5.0
+  - 2.3.7
+  - 2.4.4
+  - 2.5.1
   - ruby-head
 gemfile:
   - gemfiles/Gemfile-rails.4.2.x
   - gemfiles/Gemfile-rails.5.0.x
   - gemfiles/Gemfile-rails.5.1.x
+  - gemfiles/Gemfile-rails.5.2.x
   - gemfiles/Gemfile-rails-edge
 cache:
   bundler: true
@@ -33,3 +33,6 @@ script:
 matrix:
   allow_failures:
   - gemfile: gemfiles/Gemfile-rails-edge
+  exclude:
+    - rvm: 2.3.7
+      gemfile: gemfiles/Gemfile-rails-edge

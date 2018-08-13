@@ -22,7 +22,7 @@ class Webpacker::Engine < ::Rails::Engine
   #
   #    to turn on:
   #     - edit config/environments/production.rb
-  #     - add `config.webpacker.check_yarn_integrity = false`
+  #     - add `config.webpacker.check_yarn_integrity = true`
   initializer "webpacker.yarn_check" do |app|
     if File.exist?("yarn.lock") && app.config.webpacker.check_yarn_integrity
       output = `yarn check --integrity 2>&1`
@@ -46,7 +46,8 @@ class Webpacker::Engine < ::Rails::Engine
   end
 
   initializer "webpacker.proxy" do |app|
-    if Rails.env.development?
+    insert_middleware = Webpacker.config.dev_server.present? rescue nil
+    if insert_middleware
       app.middleware.insert_before 0,
         Rails::VERSION::MAJOR >= 5 ?
           Webpacker::DevServerProxy : "Webpacker::DevServerProxy", ssl_verify_none: true

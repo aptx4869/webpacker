@@ -3,14 +3,14 @@
 // environment.js expects to find config/webpacker.yml and resolved modules from
 // the root of a Rails project
 
-const chdirApp = () => process.chdir('test/test_app')
-const chdirCwd = () => process.chdir(process.cwd())
-chdirApp()
+const { chdirTestApp, chdirCwd } = require('../../utils/helpers')
+
+chdirTestApp()
 
 const { resolve } = require('path')
-const rules = require('../rules')
-const { ConfigList } = require('../config_types')
-const Environment = require('../environment')
+const rules = require('../../rules')
+const { ConfigList } = require('../../config_types')
+const Environment = require('../base')
 
 describe('Environment', () => {
   afterAll(chdirCwd)
@@ -31,8 +31,6 @@ describe('Environment', () => {
       const config = environment.toWebpackConfig()
       expect(config.output.filename).toEqual('[name]-[chunkhash].js')
       expect(config.output.chunkFilename).toEqual('[name]-[chunkhash].chunk.js')
-      expect(config.output.path).toEqual(resolve('public', 'packs-test'))
-      expect(config.output.publicPath).toEqual('/packs-test/')
     })
 
     test('should return default loader rules for each file in config/loaders', () => {
