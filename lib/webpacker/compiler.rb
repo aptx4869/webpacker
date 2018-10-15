@@ -45,11 +45,7 @@ class Webpacker::Compiler
 
     def watched_files_digest
       files = Dir[*default_watched_paths, *watched_paths].reject { |f| File.directory?(f) }
-      file_ids = if ENV["CI"]
-        files.sort.map { |f| "#{File.basename(f)}/#{Digest::SHA1.file(f).hexdigest}" }
-      else
-        files.map { |f| "#{File.basename(f)}/#{File.mtime(f).utc.to_i}" }
-      end
+      file_ids = files.sort.map { |f| "#{File.basename(f)}/#{Digest::SHA1.file(f).hexdigest}" }
       Digest::SHA1.hexdigest(file_ids.join("/"))
     end
 
@@ -70,6 +66,7 @@ class Webpacker::Compiler
 
       if status.success?
         logger.info "Compiled all packs in #{config.public_output_path}"
+        logger.info stdout if config.webpack_compile_output?
       else
         logger.error "Compilation failed:\n#{sterr}\n#{stdout}"
       end

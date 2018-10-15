@@ -41,6 +41,7 @@ in which case you may not even need the asset pipeline. This is mostly relevant 
   - [Watched](#watched)
 - [Deployment](#deployment)
 - [Docs](#docs)
+- [Contributing](#contributing)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -91,7 +92,7 @@ yarn add https://github.com/rails/webpacker.git
 
 # OR to try out 4.x pre-release
 gem 'webpacker', '>= 4.0.x'
-yarn add @rails/webpacker@4.0.0-pre.2
+yarn add @rails/webpacker@next
 ```
 
 Finally, run the following to install Webpacker:
@@ -230,7 +231,7 @@ staging:
   public_output_path: packs-staging
 ```
 
-or, Webpacker will use production environment as a fallback environment for loading configurations. Please note, `NODE_ENV` can either be set to `production` or `development`.
+or, Webpacker will use production environment as a fallback environment for loading configurations. Please note, `NODE_ENV` can either be set to `production`, `development` or `test`.
 This means you don't need to create additional environment files inside `config/webpacker/*` and instead use webpacker.yml to load different configurations using `RAILS_ENV`.
 
 For example, the below command will compile assets in production mode but will use staging configurations from `config/webpacker.yml` if available or use fallback production environment configuration:
@@ -271,7 +272,7 @@ yarn upgrade @rails/webpacker --latest
 yarn add webpack-dev-server@^2.11.1
 
 # Or to install a latest release (including pre-releases)
-yarn add @rails/webpacker@4.0.0-pre.2
+yarn add @rails/webpacker@next
 ```
 
 ### Yarn Integrity
@@ -510,9 +511,16 @@ Webpacker::Compiler.watched_paths << 'bower_components'
 
 Webpacker hooks up a new `webpacker:compile` task to `assets:precompile`, which gets run whenever you run `assets:precompile`. If you are not using Sprockets, `webpacker:compile` is automatically aliased to `assets:precompile`. Similar to sprockets both rake tasks will compile packs in production mode but will use `RAILS_ENV` to load configuration from `config/webpacker.yml` (if available).
 
+
 ## Docs
 
 You can find more detailed guides under [docs](./docs).
+
+
+## Contributing
+[![Code Helpers](https://www.codetriage.com/rails/webpacker/badges/users.svg)](https://www.codetriage.com/rails/webpacker)
+
+We encourage you to contribute to Webpacker! See [CONTRIBUTING](CONTRIBUTING.md) for guidelines about how to proceed.
 
 
 ## License
