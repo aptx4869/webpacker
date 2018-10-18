@@ -82,7 +82,8 @@ class Webpacker::Engine < ::Rails::Engine
   initializer "webpacker.bootstrap" do
     if defined?(Rails::Server) || defined?(Rails::Console)
       Webpacker.bootstrap
-      if defined?(Spring) && Rails.env.development?
+      if defined?(Spring)
+        require "spring/watcher"
         Spring.after_fork { Webpacker.bootstrap }
         Spring.watch(Webpacker.config.config_path)
       end
