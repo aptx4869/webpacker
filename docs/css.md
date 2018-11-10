@@ -16,7 +16,7 @@ Webpacker supports importing CSS, Sass and SCSS files directly into your JavaScr
 
 ```js
 // React component example
-// app/javascripts/packs/hello_react.jsx
+// app/javascript/packs/hello_react.jsx
 
 import React from 'react'
 import helloIcon from '../hello_react/images/icon.png'
@@ -44,7 +44,7 @@ Stylesheets end with `.module.*` is treated as [CSS Modules](https://github.com/
 
 ```js
 // React component example
-// app/javascripts/packs/hello_react.jsx
+// app/javascript/packs/hello_react.jsx
 
 import React from 'react'
 import helloIcon from '../hello_react/images/icon.png'
@@ -141,6 +141,39 @@ environment.loaders.get('sass').use.splice(-1, 0, {
   loader: 'resolve-url-loader',
   options: {
     attempts: 1
+  }
+});
+```
+
+## Working with TypeScript
+
+In order to get CSS to work with typescript you have two options.
+You can either use `require` to bypass typescript special `import`.
+
+```ts
+const styles = require('../hello_react/styles/hello-react');
+```
+You may also use the package [typings-for-css-modules-loader](https://github.com/Jimdo/typings-for-css-modules-loader) instead of `css-loader` to automatically generate typescript `.d.ts` files in order to help resolve any css/scss styles. To do that:
+
+```js
+// app/javascript/packs/hello_react.jsx
+import * as styles from '../hello_react.styles/hello-react.module.scss';
+```
+
+```bash
+yarn add --dev typings-for-css-modules-loader
+```
+
+```js
+// webpack/environment.js
+const { environment } = require('@rails/webpacker')
+
+// replace css-loader with typings-for-css-modules-loader
+environment.loaders.get('moduleSass').use = environment.loaders.get('moduleSass').use.map((u) => {
+  if(u.loader == 'css-loader') {
+    return { ...u, loader: 'typings-for-css-modules-loader' };
+  } else {
+    return u;
   }
 });
 ```
