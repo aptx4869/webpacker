@@ -1,6 +1,7 @@
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const safePostCssParser = require('postcss-safe-parser')
 const Base = require('./base')
 
 module.exports = class extends Base {
@@ -10,27 +11,37 @@ module.exports = class extends Base {
     this.plugins.append(
       'Compression',
       new CompressionPlugin({
-        asset: '[path].gz[query]',
+        filename: '[path].gz[query]',
         algorithm: 'gzip',
-        test: /\.(js|css|html|json|ico|svg|eot|otf|ttf)$/
+        cache: true,
+        test: /\.(js|css|html|json|ico|svg|eot|otf|ttf|map)$/
       })
     )
 
-    this.plugins.append('OptimizeCSSAssets', new OptimizeCSSAssetsPlugin())
+    this.plugins.append(
+      'OptimizeCSSAssets',
+      new OptimizeCSSAssetsPlugin({
+        parser: safePostCssParser,
+        map: {
+          inline: false,
+          annotation: true
+        }
+      })
+    )
 
     this.config.merge({
-      devtool: 'nosources-source-map',
+      devtool: 'source-map',
       stats: 'normal',
       bail: true,
       optimization: {
         minimizer: [
-          new UglifyJsPlugin({
+          new TerserPlugin({
             parallel: true,
             cache: true,
             sourceMap: true,
-            uglifyOptions: {
+            terserOptions: {
               parse: {
-                // Let uglify-js parse ecma 8 code but always output
+                // Let terser parse ecma 8 code but always output
                 // ES5 compliant code for older browsers
                 ecma: 8
               },

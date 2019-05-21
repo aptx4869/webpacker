@@ -4,7 +4,7 @@
 # "/packs/calendar-1016838bab065ae1e314.css".
 #
 # When the configuration is set to on-demand compilation, with the `compile: true` option in
-# the webpacker.yml file, any lookups will be preceeded by a compilation if one is needed.
+# the webpacker.yml file, any lookups will be preceded by a compilation if one is needed.
 class Webpacker::Manifest
   class MissingEntryError < StandardError; end
 
@@ -20,14 +20,37 @@ class Webpacker::Manifest
     @data[variants] = load
   end
 
-  def lookup(name, variants = [])
+  def lookup_pack_with_chunks(name, pack_type = {}, variants = [])
     @variants = variants
     compile if compiling?
-    find name
+
+    manifest_pack_type = manifest_type(pack_type[:type])
+    manifest_pack_name = manifest_name(name, manifest_pack_type)
+    find("entrypoints")[manifest_pack_name][manifest_pack_type]
+  rescue NoMethodError
+    nil
   end
 
-  def lookup!(name, variants = [])
-    lookup(name, variants) || handle_missing_entry(name)
+  def lookup_pack_with_chunks!(name, pack_type = {}, variants = [])
+    lookup_pack_with_chunks(name, pack_type, variants) || handle_missing_entry(name)
+  end
+
+  # Computes the relative path for a given Webpacker asset using manifest.json.
+  # If no asset is found, returns nil.
+  #
+  # Example:
+  #
+  #   Webpacker.manifest.lookup('calendar.js') # => "/packs/calendar-1016838bab065ae1e122.js"
+  def lookup(name, pack_type = {}, variants = [])
+    @variants = variants
+    compile if compiling?
+
+    find(full_pack_name(name, pack_type[:type]))
+  end
+
+  # Like lookup, except that if no asset is found, raises a Webpacker::Manifest::MissingEntryError.
+  def lookup!(name, pack_type = {}, variants = [])
+    lookup(name, pack_type, variants) || handle_missing_entry(name)
   end
 
   private
@@ -40,12 +63,53 @@ class Webpacker::Manifest
       Webpacker.logger.tagged("Webpacker") { compiler.compile }
     end
 
+    def data
+      if config.cache_manifest?
+        @data[variants] ||= load
+      else
+        refresh
+      end
+    end
+
     def find(name)
       data[name.to_s].presence
     end
 
+    def full_pack_name(name, pack_type)
+      return name unless File.extname(name.to_s).empty?
+      "#{name}.#{manifest_type(pack_type)}"
+    end
+
     def handle_missing_entry(name)
       raise Webpacker::Manifest::MissingEntryError, missing_file_from_manifest_error(name)
+    end
+
+    def load
+      if public_manifest_path.exist?
+        JSON.parse public_manifest_path.read
+      else
+        {}
+      end
+    end
+
+    def public_manifest_path
+      manifest = variants.blank? ? "manifest" : "manifest+#{variants.join}"
+      config.public_manifest_path.dirname.join "#{manifest}.json"
+    end
+    # The `manifest_name` method strips of the file extension of the name, because in the
+    # manifest hash the entrypoints are defined by their pack name without the extension.
+    # When the user provides a name with a file extension, we want to try to strip it off.
+    def manifest_name(name, pack_type)
+      return name if File.extname(name.to_s).empty?
+      File.basename(name, pack_type)
+    end
+
+    def manifest_type(pack_type)
+      case pack_type
+      when :javascript then "js"
+      when :stylesheet then "css"
+      else pack_type.to_s
+      end
     end
 
     def missing_file_from_manifest_error(bundle_name)
@@ -59,33 +123,5 @@ Webpacker can't find #{bundle_name} in #{public_manifest_path}. Possible causes:
 Your manifest contains:
 #{JSON.pretty_generate(@data)}
       MSG
-    end
-
-    def data
-      if config.cache_manifest?
-        @data[variants] ||= load
-      else
-        refresh
-      end
-    end
-
-    def public_manifest_path
-      manifest = variants.blank? ? "manifest" : "manifest+#{variants.join}"
-      config.public_output_path.join("#{manifest}.json")
-    end
-
-    def default_manifest_path
-      config.public_manifest_path
-    end
-
-    def load
-      manifest_path = public_manifest_path
-      if manifest_path.exist?
-        JSON.parse manifest_path.read
-      elsif default_manifest_path.exist?
-        JSON.parse default_manifest_path.read
-      else
-        {}
-      end
     end
 end

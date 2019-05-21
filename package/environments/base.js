@@ -11,6 +11,10 @@ const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin')
+const PnpWebpackPlugin = require('pnp-webpack-plugin')
+
+const { isNotObject, prettyPrint } = require('../utils/helpers')
+const deepMerge = require('../utils/deep_merge')
 
 const { ConfigList, ConfigObject } = require('../config_types')
 const rules = require('../rules')
@@ -30,17 +34,19 @@ const getPluginList = () => {
   )
   result.append('CaseSensitivePaths', new CaseSensitivePathsPlugin())
   result.append(
-    'ExtractText',
+    'MiniCssExtract',
     new MiniCssExtractPlugin({
-      filename: '[name]-[contenthash:8].css',
-      chunkFilename: '[name]-[contenthash:8].chunk.css'
+      filename: 'css/[name]-[contenthash:8].css',
+      chunkFilename: 'css/[name]-[contenthash:8].chunk.css'
     })
   )
   result.append(
     'Manifest',
     new WebpackAssetsManifest({
+      integrity: false,
+      entrypoints: true,
       writeToDisk: true,
-      publicPath: true
+      publicPath: config.publicPathWithoutCDN
     })
   )
   return result
@@ -77,19 +83,21 @@ const getModulePaths = () => {
 const getBaseConfig = () => new ConfigObject({
   mode: 'production',
   output: {
-    filename: '[name]-[chunkhash].js',
-    chunkFilename: '[name]-[chunkhash].chunk.js',
-    hotUpdateChunkFilename: '[id]-[hash].hot-update.js',
+    filename: 'js/[name]-[chunkhash].js',
+    chunkFilename: 'js/[name]-[chunkhash].chunk.js',
+    hotUpdateChunkFilename: 'js/[id]-[hash].hot-update.js',
     path: config.outputPath,
     publicPath: config.publicPath
   },
 
   resolve: {
-    extensions: config.extensions
+    extensions: config.extensions,
+    plugins: [PnpWebpackPlugin]
   },
 
   resolveLoader: {
-    modules: ['node_modules']
+    modules: ['node_modules'],
+    plugins: [PnpWebpackPlugin.moduleLoader(module)]
   },
 
   node: {
@@ -110,13 +118,42 @@ module.exports = class Base {
     this.resolvedModules = getModulePaths()
   }
 
+  splitChunks(callback = null) {
+    let appConfig = {}
+    const defaultConfig = {
+      optimization: {
+        // Split vendor and common chunks
+        // https://twitter.com/wSokra/status/969633336732905474
+        splitChunks: {
+          chunks: 'all',
+          name: false
+        },
+        // Separate runtime chunk to enable long term caching
+        // https://twitter.com/wSokra/status/969679223278505985
+        runtimeChunk: true
+      }
+    }
+
+    if (callback) {
+      appConfig = callback(defaultConfig)
+      if (isNotObject(appConfig)) {
+        throw new Error(`
+          ${prettyPrint(appConfig)} is not a valid splitChunks configuration.
+          See https://webpack.js.org/plugins/split-chunks-plugin/#configuration
+        `)
+      }
+    }
+
+    return this.config.merge(deepMerge(defaultConfig, appConfig))
+  }
+
   toWebpackConfig() {
     return this.config.merge({
       entry: this.entry.toObject(),
 
       module: {
         strictExportPresence: true,
-        rules: this.loaders.values()
+        rules: [{ parser: { requireEnsure: false } }, ...this.loaders.values()]
       },
 
       plugins: this.plugins.values(),

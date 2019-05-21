@@ -13,7 +13,7 @@ even JavaScript Sprinkles (that all continues to live in app/assets).
 However, it is possible to use Webpacker for CSS, images and fonts assets as well,
 in which case you may not even need the asset pipeline. This is mostly relevant when exclusively using component-based JavaScript frameworks.
 
-**NOTE:** The master branch now hosts the code for v4.x.x. Please refer to [3-x-stable](https://github.com/rails/webpacker/tree/3-x-stable) branch for 3.x documentation.
+**NOTE:** The master branch now hosts the code for v4.x.x. Please refer to [3-x-stable](https://github.com/rails/webpacker/tree/3-x-stable) branch for 3.x documentation. See the [v4-upgrade guide](docs/v4-upgrade.md) for an overview of the changes.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -34,7 +34,7 @@ in which case you may not even need the asset pipeline. This is mostly relevant 
   - [Vue](#vue)
   - [Elm](#elm)
   - [Stimulus](#stimulus)
-  - [Coffeescript](#coffeescript)
+  - [CoffeeScript](#coffeescript)
   - [Erb](#erb)
 - [Paths](#paths)
   - [Resolved](#resolved)
@@ -51,7 +51,7 @@ in which case you may not even need the asset pipeline. This is mostly relevant 
 
 * Ruby 2.2+
 * Rails 4.2+
-* Node.js 6.14.0+
+* Node.js 6.14.4+
 * Yarn 1.x+
 
 
@@ -84,15 +84,11 @@ Or add it to your `Gemfile`:
 
 ```ruby
 # Gemfile
-gem 'webpacker', '~> 3.5'
+gem 'webpacker', '~> 4.x'
 
 # OR if you prefer to use master
 gem 'webpacker', git: 'https://github.com/rails/webpacker.git'
 yarn add https://github.com/rails/webpacker.git
-
-# OR to try out 4.x pre-release
-gem 'webpacker', '>= 4.0.x'
-yarn add @rails/webpacker@next
 ```
 
 Finally, run the following to install Webpacker:
@@ -140,6 +136,31 @@ can use the `asset_pack_path` helper:
 ```erb
 <link rel="prefetch" href="<%= asset_pack_path 'application.css' %>" />
 <img src="<%= asset_pack_path 'images/logo.svg' %>" />
+```
+
+If you are using new webpack 4 split chunks API, then consider using `javascript_packs_with_chunks_tag` helper, which creates html
+tags for a pack and all the dependent chunks.
+
+```erb
+<%= javascript_packs_with_chunks_tag 'calendar', 'map', 'data-turbolinks-track': 'reload' %>
+
+<script src="/packs/vendor-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/calendar~runtime-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/calendar-1016838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/map~runtime-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/map-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+```
+
+**Important:** Pass all your pack names when using `javascript_packs_with_chunks_tag`
+helper otherwise you will get duplicated chunks on the page.
+
+```erb
+<%# DO %>
+<%= javascript_packs_with_chunks_tag 'calendar', 'map' %>
+
+<%# DON'T %>
+<%= javascript_packs_with_chunks_tag 'calendar' %>
+<%= javascript_packs_with_chunks_tag 'map' %>
 ```
 
 **Note:** In order for your styles or static assets files to be available in your view,
@@ -269,9 +290,9 @@ You can run following commands to upgrade Webpacker to the latest stable version
 bundle update webpacker
 rails webpacker:binstubs
 yarn upgrade @rails/webpacker --latest
-yarn add webpack-dev-server@^2.11.1
+yarn upgrade webpack-dev-server --latest
 
-# Or to install a latest release (including pre-releases)
+# Or to install the latest release (including pre-releases)
 yarn add @rails/webpacker@next
 ```
 
@@ -285,7 +306,7 @@ To turn off this option, you will need to change the default setting in `config/
 # config/webpacker.yml
 development:
   ...
-  # Verifies that versions and hashed value of the package contents in the project's package.json
+  # Verifies that correct packages and versions are installed by inspecting package.json, yarn.lock, and node_modules
   check_yarn_integrity: false
 ```
 
@@ -310,7 +331,7 @@ new Rails 5.1+ app using `--webpack=react` option:
 rails new myapp --webpack=react
 ```
 
-(or run `bundle exec rails webpacker:install:react` in a existing Rails app already
+(or run `bundle exec rails webpacker:install:react` in an existing Rails app already
 setup with Webpacker).
 
 The installer will add all relevant dependencies using Yarn, changes
@@ -417,14 +438,14 @@ rails new myapp --webpack=stimulus
 
 Please read [The Stimulus Handbook](https://stimulusjs.org/handbook/introduction) or learn more about its source code at https://github.com/stimulusjs/stimulus
 
-### Coffeescript
+### CoffeeScript
 
-To add [Coffeescript](http://coffeescript.org/) support,
+To add [CoffeeScript](http://coffeescript.org/) support,
 run `bundle exec rails webpacker:install:coffee` on a Rails app already
 setup with Webpacker.
 
 An example `hello_coffee.coffee` file will also be added to your project
-in `app/javascript/packs` so that you can experiment with Coffeescript right away.
+in `app/javascript/packs` so that you can experiment with CoffeeScript right away.
 
 ### Erb
 

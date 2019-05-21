@@ -4,11 +4,11 @@ copy_file "#{__dir__}/config/webpacker.yml", "config/webpacker.yml"
 puts "Copying webpack core config"
 directory "#{__dir__}/config/webpack", "config/webpack"
 
-say "Copying .postcssrc.yml to app root directory"
-copy_file "#{__dir__}/config/.postcssrc.yml", ".postcssrc.yml"
+say "Copying postcss.config.js to app root directory"
+copy_file "#{__dir__}/config/postcss.config.js", "postcss.config.js"
 
-say "Copying .babelrc to app root directory"
-copy_file "#{__dir__}/config/.babelrc", ".babelrc"
+say "Copying babel.config.js to app root directory"
+copy_file "#{__dir__}/config/babel.config.js", "babel.config.js"
 
 say "Copying .browserslistrc to app root directory"
 copy_file "#{__dir__}/config/.browserslistrc", ".browserslistrc"
@@ -23,22 +23,23 @@ end
 apply "#{__dir__}/binstubs.rb"
 
 if File.exists?(".gitignore")
-  append_to_file ".gitignore", <<-EOS
-/public/packs
-/public/packs-test
-/node_modules
-/yarn-error.log
-yarn-debug.log*
-.yarn-integrity
-EOS
+  append_to_file ".gitignore" do
+    "\n"                   +
+    "/public/packs\n"      +
+    "/public/packs-test\n" +
+    "/node_modules\n"      +
+    "/yarn-error.log\n"    +
+    "yarn-debug.log*\n"    +
+    ".yarn-integrity\n"
+  end
 end
 
-if Webpacker::VERSION == /^[0-9]+\.[0-9]+\.[0-9]+$/
+if Webpacker::VERSION =~ /^[0-9]+\.[0-9]+\.[0-9]+$/
   say "Installing all JavaScript dependencies [#{Webpacker::VERSION}]"
   run "yarn add @rails/webpacker"
 else
   say "Installing all JavaScript dependencies [from prerelease rails/webpacker]"
-  run "yarn add https://github.com/rails/webpacker"
+  run "yarn add @rails/webpacker@next"
 end
 
 say "Installing dev server for live reloading"

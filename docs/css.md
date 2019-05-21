@@ -32,7 +32,7 @@ const Hello = props => (
 
 ## Import scoped styles into your JS app
 
-Stylesheets end with `.module.*` is treated as [CSS Modules](https://github.com/css-modules/css-modules).
+Stylesheets that end with `.module.*` are treated as [CSS Modules](https://github.com/css-modules/css-modules).
 
 ```sass
 // app/javascript/hello_react/styles/hello-react.module.sass
@@ -60,11 +60,64 @@ const Hello = props => (
 
 **Note:** Declared class is referenced as object property in JavaScript.
 
+## Import scoped styles into your TypeScript app
+
+Using CSS modules with a TypeScript application requires a few differences from a JavaScript app. The CSS / Sass files are the same:
+
+```sass
+// app/javascript/hello_react/styles/hello-react.module.sass
+
+.helloReact
+  padding: 20px
+  font-size: 12px
+```
+
+There must also be a type definition file for these styles:
+
+```typescript
+export const helloReact: string;
+```
+
+You can then import the styles like this:
+
+```typescript
+// React component example
+// app/javascripts/packs/hello_react.tsx
+
+import React from 'react'
+import helloIcon from '../hello_react/images/icon.png'
+import * as styles from '../hello_react/styles/hello-react.module.sass'
+
+const Hello = props => (
+  <div className={styles.helloReact}>
+    <img src={helloIcon} alt="hello-icon" />
+    <p>Hello {props.name}!</p>
+  </div>
+)
+```
+
+You can automatically generate type definitions for the styles by installing the `typed-scss-modules` as a development dependency:
+
+```
+yarn add typed-scss-modules --dev
+```
+
+Then by adding these lines to your `package.json`:
+
+```
+"scripts": {
+  "gen-typings": "yarn run tsm app/javascript/**/*.sass",
+  "watch-typings": "yarn run tsm app/javascript/**/*.sass -w"
+},
+```
+
+You can generate the typings for the stylesheet by running the command `yarn gen-typings` when you've finished writing CSS, or run `yarn watch-typings` to have it automatically generate them as you go.
+
 
 ## Link styles from your Rails views
 
 Under the hood webpack uses
-[extract-text-webpack-plugin](https://github.com/webpack-contrib/extract-text-webpack-plugin) plugin to extract all the referenced styles within your app and compile it into
+[mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin) plugin to extract all the referenced styles within your app and compile it into
 a separate `[pack_name].css` bundle so that in your view you can use the
 `stylesheet_pack_tag` helper.
 
@@ -72,6 +125,7 @@ a separate `[pack_name].css` bundle so that in your view you can use the
 <%= stylesheet_pack_tag 'hello_react' %>
 ```
 
+Webpacker emits css files only if `extract_css` is set to true in webpacker.yml otherwise `stylesheet_pack_tag` returns nil.
 
 ## Add bootstrap
 
@@ -102,13 +156,22 @@ Or in your app/javascript/app.sass file:
 
 Webpacker out-of-the-box provides CSS post-processing using
 [postcss-loader](https://github.com/postcss/postcss-loader)
-and the installer sets up a standard `.postcssrc.yml`
+and the installer sets up a standard `postcss.config.js`
 file in your app root with standard plugins.
 
-```yml
-plugins:
-  postcss-import: {}
-  postcss-preset-env: {}
+```js
+module.exports = {
+  plugins: [
+    require('postcss-import'),
+    require('postcss-flexbugs-fixes'),
+    require('postcss-preset-env')({
+      autoprefixer: {
+        flexbox: 'no-2009'
+      },
+      stage: 3
+    })
+  ]
+}
 ```
 
 ## Using CSS with [vue-loader](https://github.com/vuejs/vue-loader)

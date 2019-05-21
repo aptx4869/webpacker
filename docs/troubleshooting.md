@@ -1,5 +1,14 @@
 # Troubleshooting
 
+## Debugging your webpack config
+
+1. Read the error message carefully. The error message will tell you the precise key value
+   that is not matching what Webpack expects.
+2. Put a `debugger` statement in your Webpack configuration and run `bin/webpack --debug`. 
+   If you have a node debugger installed, you'll see the Chrome debugger for your webpack
+   config. For example, install the Chrome extension [NiM](https://chrome.google.com/webstore/detail/nodejs-v8-inspector-manag/gnhhdgbaldcilmgcpfddgdbkhjohddkj) and 
+   set the option for the dev tools to open automatically. For more details on debugging,
+   see the official [Webpack docs on debugging](https://webpack.js.org/contribute/debugging/#devtools)
 
 ## ENOENT: no such file or directory - node-sass
 
@@ -86,7 +95,7 @@ chmod +x $HOME/your_rails_app/node_modules/.bin/elm-make
 ```
 
 ## Rake assets:precompile fails. ExecJS::RuntimeError
-This error occurs because you are trying to uglify a pack that's already been minified by Webpacker. To avoid this conflict and prevent appearing of ExecJS::RuntimeError error, you will need to disable uglifier from Rails config:
+This error occurs because you are trying to minify by terser a pack that's already been minified by Webpacker. To avoid this conflict and prevent appearing of ExecJS::RuntimeError error, you will need to disable uglifier from Rails config:
 
 ```ruby
 // production.rb
@@ -96,7 +105,7 @@ Rails.application.config.assets.js_compressor = :uglifier
 
 # To
 
-#Rails.application.config.assets.js_compressor = :uglifier
+Rails.application.config.assets.js_compressor = Uglifier.new(harmony: true)
 
 ```
 

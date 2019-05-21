@@ -38,6 +38,7 @@ environment.config.set('output.filename', '[name].js')
 
 // Merge custom config
 environment.config.merge(customConfig)
+environment.config.merge({ devtool: 'none' })
 
 // Delete a property
 environment.config.delete('output.chunkFilename')
@@ -68,10 +69,13 @@ yarn add json-loader
 // config/webpack/environment.js
 const { environment } = require('@rails/webpacker')
 
-environment.loaders.append('json', {
+const jsonLoader = {
   test: /\.json$/,
   use: 'json-loader'
-})
+}
+
+// Insert json loader at the end of list
+environment.loaders.append('json', jsonLoader)
 
 // Insert json loader at the top of list
 environment.loaders.prepend('json', jsonLoader)
@@ -217,7 +221,7 @@ const webpack = require('webpack')
 
 // Get a pre-configured plugin
 const manifestPlugin = environment.plugins.get('Manifest')
-manifestPlugin.opts.writeToFileEmit = false
+manifestPlugin.options.writeToFileEmit = false
 
 // Add an additional plugin of your choosing : ProvidePlugin
 environment.plugins.prepend(
@@ -256,7 +260,51 @@ const { environment } = require('@rails/webpacker')
 environment.resolvedModules.append('vendor', 'vendor')
 ```
 
-### Add common chunks
+### Add SplitChunks (Webpack V4)
+Originally, chunks (and modules imported inside them) were connected by a parent-child relationship in the internal webpack graph. The CommonsChunkPlugin was used to avoid duplicated dependencies across them, but further optimizations were not possible
+
+Since webpack v4, the CommonsChunkPlugin was removed in favor of optimization.splitChunks.
+
+For the full configuration options of SplitChunks, see the [Webpack documentation](https://webpack.js.org/plugins/split-chunks-plugin/).
+
+```js
+// config/webpack/environment.js
+
+// Enable the default config
+environment.splitChunks()
+
+// or using custom config
+environment.splitChunks((config) => Object.assign({}, config, { optimization: { splitChunks: false }}))
+```
+
+Then use, `javascript_packs_with_chunks_tag` helper to include all the transpiled
+packs with the chunks in your view, which creates html tags for all the chunks.
+
+```erb
+<%= javascript_packs_with_chunks_tag 'calendar', 'map', 'data-turbolinks-track': 'reload' %>
+
+<script src="/packs/vendor-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/calendar~runtime-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/calendar-1016838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/map~runtime-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/map-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+```
+
+**Important:** Pass all your pack names when using this helper otherwise you will
+get duplicated chunks on the page.
+
+```erb
+<%# DO %>
+<%= javascript_packs_with_chunks_tag 'calendar', 'map' %>
+
+<%# DON'T %>
+<%= javascript_packs_with_chunks_tag 'calendar' %>
+<%= javascript_packs_with_chunks_tag 'map' %>
+```
+
+For the old configuration with the CommonsChunkPlugin see below. **Note** that this functionality is deprecated in Webpack V4.
+
+### Add common chunks (deprecated in Webpack V4)
 
 The CommonsChunkPlugin is an opt-in feature that creates a separate file (known as a chunk), consisting of common modules shared between multiple entry points. By separating common modules from bundles, the resulting chunked file can be loaded once initially, and stored in the cache for later use. This results in page speed optimizations as the browser can quickly serve the shared code from the cache, rather than being forced to load a larger bundle whenever a new page is visited.
 

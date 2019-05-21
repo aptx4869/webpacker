@@ -1,4 +1,6 @@
 class Webpacker::DevServer
+  DEFAULT_ENV_PREFIX = "WEBPACKER_DEV_SERVER".freeze
+
   # Configure dev server connection timeout (in seconds), default: 0.01
   # Webpacker.dev_server.connect_timeout = 1
   cattr_accessor(:connect_timeout) { 0.01 }
@@ -18,15 +20,6 @@ class Webpacker::DevServer
     end
   rescue
     false
-  end
-
-  def hot_module_replacing?
-    case fetch(:hmr)
-    when true, "true"
-      true
-    else
-      false
-    end
   end
 
   def host
@@ -58,9 +51,13 @@ class Webpacker::DevServer
     fetch(:pretty)
   end
 
+  def env_prefix
+    config.dev_server.fetch(:env_prefix, DEFAULT_ENV_PREFIX)
+  end
+
   private
     def fetch(key)
-      ENV["WEBPACKER_DEV_SERVER_#{key.upcase}"] || config.dev_server.fetch(key, defaults[key])
+      ENV["#{env_prefix}_#{key.upcase}"] || config.dev_server.fetch(key, defaults[key])
     end
 
     def defaults

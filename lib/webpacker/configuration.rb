@@ -36,7 +36,7 @@ class Webpacker::Configuration
   end
 
   def public_path
-    root_path.join("public")
+    root_path.join(fetch(:public_root_path))
   end
 
   def public_output_path
@@ -69,6 +69,10 @@ class Webpacker::Configuration
 
   def webpack_compile_output?
     fetch(:webpack_compile_output)
+  end
+
+  def extract_css?
+    fetch(:extract_css)
   end
 
   private

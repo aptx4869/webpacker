@@ -1,6 +1,10 @@
+const { stringify } = require('flatted/cjs')
+
 const isObject = value => typeof value === 'object'
   && value !== null
   && (value.length === undefined || value.length === null)
+
+const isNotObject = value => !isObject(value)
 
 const isBoolean = str => /^true/.test(str) || /^false/.test(str)
 
@@ -15,7 +19,7 @@ const isStrPath = (key) => {
 
 const isArray = value => Array.isArray(value)
 
-const isEqual = (target, source) => JSON.stringify(target) === JSON.stringify(source)
+const isEqual = (target, source) => stringify(target) === stringify(source)
 
 const canMerge = value => isObject(value) || isArray(value)
 
@@ -31,15 +35,24 @@ const chdirTestApp = () => {
 
 const chdirCwd = () => process.chdir(process.cwd())
 
+const resetEnv = () => {
+  process.env = {}
+}
+
+const ensureTrailingSlash = path => (path.endsWith('/') ? path : `${path}/`)
+
 module.exports = {
   chdirTestApp,
   chdirCwd,
+  ensureTrailingSlash,
   isObject,
+  isNotObject,
   isBoolean,
   isArray,
   isEqual,
   isEmpty,
   isStrPath,
   canMerge,
-  prettyPrint
+  prettyPrint,
+  resetEnv
 }

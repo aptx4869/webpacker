@@ -1,17 +1,239 @@
 **Please note that Webpacker 3.1.0 and 3.1.1 have some serious bugs so please consider using either 3.0.2 or 3.2.0**
 
+## [4.0.2] - 2019-03-06
+
+- Bump the version on npm
+
+## [4.0.1] - 2019-03-04
+
+### Fixed
+
+- Pre-release version installer
+
+
+## [4.0.0] - 2019-03-04
+
+No changes in this release. See RC releases for changes.
+
+
+## [4.0.0.rc.8] - 2019-03-03
+
+### Fixed
+
+- Re-enable source maps in production to make debugging in production
+  easier. Enabling source maps doesn't have drawbacks for most of the
+  applications since maps are compressed by default and aren't loaded
+  by browsers unless Dev Tools are opened.
+
+Source maps can be disabled in any environment configuration, e.g:
+
+```js
+// config/webpack/production.js
+
+const environment = require('./environment')
+environment.config.merge({ devtool: 'none' })
+
+module.exports = environment.toWebpackConfig()
+```
+
+- Reintroduced `context` to the file loader. Reverting the simpler paths change
+
+- Updated file loader to have filename based on the path. This change
+keeps the old behaviour intact i.e. let people use namespaces for media
+inside `app/javascript` and also include media outside of `app/javascript`
+with simpler paths, for example from `node_modules` or `app/assets`
+
+```bash
+# Files inside app/javascript (i.e. packs source path)
+# media/[full_path_relative_to_app_javascript]/name_of_the_asset_with_digest
+media/images/google-97e897b3851e415bec4fd30c265eb3ce.jpg
+media/images/rails-45b116b1f66cc5e6f9724e8f9a2db73d.png
+media/images/some_namespace/google-97e897b3851e415bec4fd30c265eb3ce.jpg
+
+# Files outside app/javascript (i.e. packs source path)
+# media/[containing_folder_name]/name_of_the_asset_with_digest
+media/some_assets/rails_assets-f0f7bbb5.png
+media/webfonts/fa-brands-400-4b115e11.woff2
+```
+
+This change is done so we don't end up paths like `media/_/assets/images/rails_assets-f0f7bbb5ef00110a0dcef7c2cb7d34a6.png` or `media/_/_/node_modules/foo-f0f7bbb5ef00110a0dcef7c2cb7d34a6.png` for media outside of
+`app/javascript`
+
+
+## [4.0.0.rc.7] - 2019-01-25
+
+### Fixed
+
+- Webpacker builds test app assets [#1908](https://github.com/rails/webpacker/issues/1908)
+
+
+## [4.0.0.rc.6] - 2019-01-25
+
+### Fixed
+
+- Remove `context` from file loader in favour of simpler paths
+
+```rb
+# before
+"_/assets/images/avatar.png": "/packs/_/assets/images/avatar-057862c747f0fdbeae506bdd0516cad1.png"
+
+# after
+"media/avatar.png": "/packs/media/avatar-057862c747f0fdbeae506bdd0516cad1.png"
+```
+
+To get old behaviour:
+
+```js
+// config/webpack/environment.js
+
+const { environment, config } = require('@rails/webpacker')
+const { join } = require('path')
+
+const fileLoader = environment.loaders.get('file')
+fileLoader.use[0].options.name = '[path][name]-[hash].[ext]'
+fileLoader.use[0].options.context = join(config.source_path) // optional if you don't want to expose full paths
+```
+
+### Added
+
+- Namespaces for compiled packs in the public directory
+
+```rb
+# before
+"runtime~hello_react" => "/packs/runtime~hello_react-da2baf7fd07b0e8b6d17.js"
+
+# after
+"runtime~hello_react" => "/packs/js/runtime~hello_react-da2baf7fd07b0e8b6d17.js"
+```
+
+## [4.0.0.rc.5] - 2019-01-21
+
+### Updated
+
+- Gems and node dependencies
+
+
+## [4.0.0.rc.4] - 2019-01-21
+
+### Added
+ - `stylesheet_packs_with_chunks_tag` helper, similar to javascript helper but for
+ loading stylesheets chunks.
+
+```erb
+<%= stylesheet_packs_with_chunks_tag 'calendar', 'map', 'data-turbolinks-track': 'reload' %>
+
+<link rel="stylesheet" media="screen" href="/packs/3-8c7ce31a.chunk.css" />
+<link rel="stylesheet" media="screen" href="/packs/calendar-8c7ce31a.chunk.css" />
+<link rel="stylesheet" media="screen" href="/packs/map-8c7ce31a.chunk.css" />
+```
+
+**Important:** Pass all your pack names when using `stylesheet_packs_with_chunks_tag`
+helper otherwise you will get duplicated chunks on the page.
+
+```erb
+<%# DO %>
+# <%= stylesheet_packs_with_chunks_tag 'calendar', 'map' %>
+<%# DON'T %>
+# <%= stylesheet_packs_with_chunks_tag 'calendar' %>
+# <%= stylesheet_packs_with_chunks_tag 'map' %>
+```
+
+
+## [4.0.0.rc.3] - 2019-01-17
+
+### Fixed
+ - Issue with javascript_pack_tag asset duplication [#1898](https://github.com/rails/webpacker/pull/1898)
+
+
+### Added
+ - `javascript_packs_with_chunks_tag` helper, which creates html tags
+  for a pack and all the dependent chunks, when using splitchunks.
+
+```erb
+<%= javascript_packs_with_chunks_tag 'calendar', 'map', 'data-turbolinks-track': 'reload' %>
+
+<script src="/packs/vendor-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/calendar~runtime-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/calendar-1016838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/map~runtime-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+<script src="/packs/map-16838bab065ae1e314.js" data-turbolinks-track="reload"></script>
+```
+
+**Important:** Pass all your pack names when using `javascript_packs_with_chunks_tag`
+helper otherwise you will get duplicated chunks on the page.
+
+```erb
+<%# DO %>
+<%= javascript_packs_with_chunks_tag 'calendar', 'map' %>
+
+<%# DON'T %>
+<%= javascript_packs_with_chunks_tag 'calendar' %>
+<%= javascript_packs_with_chunks_tag 'map' %>
+```
+
+## [4.0.0.rc.2] - 2018-12-15
+
+### Fixed
+ - Disable integrity hash generation [#1835](https://github.com/rails/webpacker/issues/1835)
+
+
+## [4.0.0.rc.1] - 2018-12-14
+
+### Breaking changes
+
+  - Order of rules changed so you might have to change append to prepend,
+  depending on how you want to process packs [#1823](https://github.com/rails/webpacker/pull/1823)
+  ```js
+  environment.loaders.prepend()
+  ```
+  - Separate CSS extraction from build environment [#1625](https://github.com/rails/webpacker/pull/1625)
+  ```yml
+  # Extract and emit a css file
+  extract_css: true
+  ```
+  - Separate rule to compile node modules
+  (fixes cases where ES6 libraries were included in the app code) [#1823](https://github.com/rails/webpacker/pull/1823).
+
+    In previous versions only application code was transpiled. Now everything in `node_modules` is transpiled with Babel. In some cases it could break your build (known issue with `mapbox-gl` package being broken by Babel, https://github.com/mapbox/mapbox-gl-js/issues/3422).
+
+    [`nodeModules` loader](https://github.com/rails/webpacker/pull/1823/files#diff-456094c8451b5774db50028dfecf4aa8) ignores `config.babel.js` and uses hard-coded `'@babel/preset-env', { modules: false }` config.
+
+    To keep previous behavior, remove `nodeModules` loader specifying `environment.loaders.delete('nodeModules');` in your `config/webpack/environment.js` file.
+
+  - File loader extensions API [#1823](https://github.com/rails/webpacker/pull/1823)
+  ```yml
+  # webpacker.yml
+  static_assets_extensions:
+    - .pdf
+    # etc..
+  ```
+
+### Added
+
+  - Move `.babelrc` and `.postcssrc` to `.js` variant [#1822](https://github.com/rails/webpacker/pull/1822)
+  - Use postcss safe parser when optimising css assets [#1822](https://github.com/rails/webpacker/pull/1822)
+  - Add split chunks api (undocumented)
+  ```js
+  const { environment } = require('@rails/webpacker')
+  // Enable with default config
+  environment.splitChunks()
+  // Configure via a callback
+  environment.splitChunks((config) => Object.assign({}, config, { optimization: { splitChunks: false }}))
+  ```
+  - Allow changing static file extensions using webpacker.yml (undocumented)
+
 ## [4.0.0-pre.3] - 2018-10-01
 
 ### Added
 
   - Move supported browsers configuration to [.browserslistrc](https://github.com/browserslist/browserslist#queries)
 
-## Breaking changes
+### Breaking changes
 
   - postcss-next is replaced with postcss-preset-env
   - babel@7
 
-## Fixed
+### Fixed
 
   - Bring back test env [#1563](https://github.com/rails/webpacker/pull/1563)
 
@@ -19,7 +241,7 @@ Please see a list of [commits](https://github.com/rails/webpacker/compare/2dd68f
 
 ## [4.0.0-pre.2] - 2018-04-2
 
-## Fixed
+### Fixed
 
 - Webpack dev server version in installer
 
@@ -329,7 +551,7 @@ without sprockets
 - Allow dev server connect timeout (in seconds) to be configurable, default: 0.01
 
 ```rb
-# Change to 1s
+# Change to 1s
 Webpacker.dev_server.connect_timeout = 1
 ```
 

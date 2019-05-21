@@ -16,9 +16,11 @@ class CompilerTest < Minitest::Test
   end
 
   def test_custom_environment_variables
-    assert Webpacker.compiler.send(:webpack_env)["FOO"] == nil
+    assert_nil Webpacker.compiler.send(:webpack_env)["FOO"]
     Webpacker.compiler.env["FOO"] = "BAR"
     assert Webpacker.compiler.send(:webpack_env)["FOO"] == "BAR"
+  ensure
+    Webpacker.compiler.env = {}
   end
 
   def test_default_watched_paths
@@ -60,5 +62,15 @@ class CompilerTest < Minitest::Test
 
   def test_compilation_digest_path
     assert_equal Webpacker.compiler.send(:compilation_digest_path).basename.to_s, "last-compilation-digest-#{Webpacker.env}"
+  end
+
+  def test_external_env_variables
+    assert_nil Webpacker.compiler.send(:webpack_env)["WEBPACKER_ASSET_HOST"]
+    assert_nil Webpacker.compiler.send(:webpack_env)["WEBPACKER_RELATIVE_URL_ROOT"]
+
+    ENV["WEBPACKER_ASSET_HOST"] = "foo.bar"
+    ENV["WEBPACKER_RELATIVE_URL_ROOT"] = "/baz"
+    assert_equal Webpacker.compiler.send(:webpack_env)["WEBPACKER_ASSET_HOST"], "foo.bar"
+    assert_equal Webpacker.compiler.send(:webpack_env)["WEBPACKER_RELATIVE_URL_ROOT"], "/baz"
   end
 end
