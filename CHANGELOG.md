@@ -1,5 +1,33 @@
 **Please note that Webpacker 3.1.0 and 3.1.1 have some serious bugs so please consider using either 3.0.2 or 3.2.0**
 
+## [[4.0.4]](https://github.com/rails/webpacker/compare/v4.0.3...v4.0.4) - 2019-05-28
+
+- Remove bundler version constraint
+
+## [[4.0.3]](https://github.com/rails/webpacker/compare/v4.0.2...v4.0.3) - 2019-05-28
+
+Please see the diff
+
+### Breaking changes
+
+ - [`@babel/polyfill`](https://babeljs.io/docs/en/next/babel-polyfill.html) [doesn't make it possible to provide a smooth migration path from `core-js@2` to `core-js@3`](https://github.com/zloirock/core-js/blob/master/docs/2019-03-19-core-js-3-babel-and-a-look-into-the-future.md#babelpolyfill): for this reason, it was decided to deprecate `@babel/polyfill` in favor of separate inclusion of required parts of `core-js` and `regenerator-runtime`. [#2031](https://github.com/rails/webpacker/pull/2031)
+
+In each of your `/packs/*.js` files, change this:
+```js
+import "@babel/polyfill";
+```
+to this:
+```js
+import "core-js/stable";
+import "regenerator-runtime/runtime";
+```
+
+Don't forget install those dependencies directly!
+
+```sh
+yarn add --save core-js regenerator-runtime
+```
+
 ## [4.0.2] - 2019-03-06
 
 - Bump the version on npm
